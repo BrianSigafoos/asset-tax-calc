@@ -1,0 +1,6 @@
+trade_id,asset,side,trade_date,quantity,price_usd,fees_usd,account,notes
+trade-001,MSFT,SELL,2025-02-10,15,410,10,Brokerage 1,Trim position
+trade-002,MSFT,SELL,2025-07-21,5,430,6,Brokerage 1,Tax planning
+trade-003,GOOGL,BUY,2025-03-05,6,165,4,Brokerage 1,Add shares
+trade-004,GOOGL,SELL,2025-10-14,8,175,5,Brokerage 1,Rebalance
+trade-005,TSLA,SELL,2025-05-30,6,240,8,Brokerage 1,Cash needs

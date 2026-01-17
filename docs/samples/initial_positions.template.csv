@@ -1,0 +1,4 @@
+lot_id,asset,acquired_date,quantity,cost_basis_usd,account,notes
+lot-001,MSFT,2021-03-18,40,7200,Brokerage 1,Core position
+lot-002,GOOGL,2022-08-09,15,1800,Brokerage 1,Long-term lot
+lot-003,TSLA,2024-02-02,12,2400,Brokerage 1,Starter lot

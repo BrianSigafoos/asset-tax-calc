@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Serve docs",
+      "type": "shell",
+      "command": "python3",
+      "args": ["-m", "http.server", "--directory", "docs", "8000"],
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

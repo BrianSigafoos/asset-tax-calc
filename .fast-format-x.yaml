@@ -1,0 +1,32 @@
+# .fast-format-x.yaml
+# One command to auto-format every changed file. All formatters run in parallel.
+# Learn more at: https://ffx.bfoos.net
+# Install with: curl -LsSf https://ffx.bfoos.net/install.sh | bash
+
+version: 1
+
+tools:
+  # JavaScript - standard
+  - name: standard
+    include:
+      - "**/*.js"
+    exclude:
+      - "node_modules/**"
+    cmd: npx
+    args: [standard, --fix]
+    check_args: [standard]
+
+  # Web files: CSS, Markdown, JSON, YAML, HTML, JS
+  - name: prettier
+    include:
+      - "**/*.css"
+      - "**/*.md"
+      - "**/*.json"
+      - "**/*.yaml"
+      - "**/*.yml"
+      - "**/*.html"
+    exclude:
+      - "tmp/**"
+    cmd: npx
+    args: [prettier, --write]
+    check_args: [prettier, --check]

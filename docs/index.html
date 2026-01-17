@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asset Tax Calculator</title>
+    <meta
+      name="description"
+      content="Model asset sales, apply cost-basis strategies, and estimate taxes with 2025 US brackets."
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="bg-grid"></div>
+    <div class="bg-orb orb-one"></div>
+    <div class="bg-orb orb-two"></div>
+    <div class="bg-orb orb-three"></div>
+
+    <div class="page">
+      <header class="hero">
+        <div class="eyebrow">Asset Tax Strategy</div>
+        <h1>Asset Tax Calculator</h1>
+        <p class="hero-subtitle">
+          Upload your initial lots and trades, compare FIFO/LIFO/HIFO, and
+          estimate taxes using 2025 US brackets.
+        </p>
+        <div class="hero-actions">
+          <a
+            class="btn btn-primary"
+            href="samples/initial_positions.template.csv"
+            download
+          >
+            Download positions template
+          </a>
+          <a
+            class="btn btn-ghost"
+            href="samples/last_year_trades.template.csv"
+            download
+          >
+            Download trades template
+          </a>
+          <button class="btn btn-ghost" type="button" id="loadSampleData">
+            Load sample data
+          </button>
+        </div>
+        <div class="hero-note">
+          Calculations are estimates. Always confirm with a tax professional.
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="card" style="--delay: 0.05s">
+          <div class="card-header">
+            <div>
+              <h2>Uploads</h2>
+              <p class="card-subtitle">
+                Provide initial lots plus the full trade history for the tax
+                year.
+              </p>
+            </div>
+            <span class="badge">Input</span>
+          </div>
+
+          <div class="upload-grid">
+            <label
+              class="upload-zone"
+              for="positionsFile"
+              data-target="positionsFile"
+            >
+              <span class="upload-title">Initial positions CSV</span>
+              <span class="upload-meta" id="positionsMeta">No file loaded</span>
+              <span class="upload-hint"
+                >Expected: lot_id, asset, acquired_date</span
+              >
+            </label>
+            <input
+              type="file"
+              id="positionsFile"
+              accept=".csv"
+              class="file-input"
+            />
+
+            <label
+              class="upload-zone"
+              for="tradesFile"
+              data-target="tradesFile"
+            >
+              <span class="upload-title">Last year trades CSV</span>
+              <span class="upload-meta" id="tradesMeta">No file loaded</span>
+              <span class="upload-hint">Expected: trade_id, asset, side</span>
+            </label>
+            <input
+              type="file"
+              id="tradesFile"
+              accept=".csv"
+              class="file-input"
+            />
+          </div>
+
+          <div class="upload-actions">
+            <button class="btn btn-ghost" type="button" id="clearData">
+              Clear files
+            </button>
+          </div>
+
+          <div class="status" id="statusPanel">
+            <div class="status-title" id="statusTitle">
+              Ready for CSV uploads.
+            </div>
+            <ul class="status-list" id="statusList"></ul>
+          </div>
+        </section>
+
+        <section class="card" style="--delay: 0.1s">
+          <div class="card-header">
+            <div>
+              <h2>Tax Profile</h2>
+              <p class="card-subtitle">
+                Use 2025 federal brackets to estimate short-term taxes.
+              </p>
+            </div>
+            <span class="badge">Profile</span>
+          </div>
+
+          <div class="form-grid">
+            <label class="field" for="filingStatus">
+              <span>Filing status</span>
+              <select id="filingStatus">
+                <option value="single">Single</option>
+                <option value="married_joint">Married filing jointly</option>
+                <option value="married_separate">
+                  Married filing separately
+                </option>
+                <option value="head_of_household">Head of household</option>
+              </select>
+            </label>
+
+            <label class="field" for="bracketMode">
+              <span>Bracket mode</span>
+              <select id="bracketMode">
+                <option value="auto">Auto (income based)</option>
+                <option value="manual">Manual bracket</option>
+              </select>
+            </label>
+
+            <label class="field" for="totalIncome" id="incomeField">
+              <span>Total taxable income</span>
+              <div class="input-wrap">
+                <span class="prefix">$</span>
+                <input
+                  type="number"
+                  id="totalIncome"
+                  min="0"
+                  placeholder="185000"
+                  class="has-prefix"
+                />
+              </div>
+              <span class="field-note" id="autoBracketLabel">Bracket: 0%</span>
+            </label>
+
+            <label class="field is-hidden" for="manualBracket" id="manualField">
+              <span>Manual bracket</span>
+              <select id="manualBracket">
+                <option value="0.1">10%</option>
+                <option value="0.12">12%</option>
+                <option value="0.22">22%</option>
+                <option value="0.24">24%</option>
+                <option value="0.32">32%</option>
+                <option value="0.35">35%</option>
+                <option value="0.37">37%</option>
+              </select>
+            </label>
+
+            <label class="field" for="longTermRate">
+              <span>Long-term gains rate</span>
+              <select id="longTermRate">
+                <option value="0">0%</option>
+                <option value="0.15" selected>15%</option>
+                <option value="0.2">20%</option>
+              </select>
+            </label>
+
+            <div class="field">
+              <span>NIIT applies</span>
+              <div class="toggle-row">
+                <input type="checkbox" id="niitToggle" />
+                <label for="niitToggle">Apply 3.8% NIIT to gains</label>
+              </div>
+            </div>
+          </div>
+
+          <p class="fine-print">
+            2025 brackets sourced from IRS Revenue Procedure 2024-40. Married
+            filing separately defaults to half of joint brackets in auto mode.
+          </p>
+        </section>
+
+        <section class="card" style="--delay: 0.15s">
+          <div class="card-header">
+            <div>
+              <h2>Strategy</h2>
+              <p class="card-subtitle">
+                Toggle cost-basis rules and recompute immediately.
+              </p>
+            </div>
+            <span class="badge badge-outline">Strategy</span>
+          </div>
+
+          <div class="strategy-grid" id="strategyGrid">
+            <label class="radio-pill">
+              <input type="radio" name="strategy" value="FIFO" checked />
+              <span>FIFO</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="strategy" value="LIFO" />
+              <span>LIFO</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="strategy" value="HIFO" />
+              <span>HIFO</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="strategy" value="LOFO" />
+              <span>LOFO</span>
+            </label>
+          </div>
+
+          <div class="callout">
+            Best strategy (lowest estimated tax):
+            <strong id="bestStrategy">N/A</strong>
+          </div>
+        </section>
+
+        <section class="card card-wide" style="--delay: 0.2s">
+          <div class="card-header">
+            <div>
+              <h2>Results Overview</h2>
+              <p class="card-subtitle">
+                Summary for the selected strategy, including estimated taxes.
+              </p>
+            </div>
+            <span class="badge badge-soft">Overview</span>
+          </div>
+
+          <div class="metric-grid" id="summaryMetrics">
+            <div class="metric">
+              <span class="metric-label">Total gain</span>
+              <span class="metric-value" id="metricTotalGain">$0</span>
+              <span class="metric-hint">Across all sells</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Short-term gain</span>
+              <span class="metric-value" id="metricShortGain">$0</span>
+              <span class="metric-hint">Held &lt; 365 days</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Long-term gain</span>
+              <span class="metric-value" id="metricLongGain">$0</span>
+              <span class="metric-hint">Held 365+ days</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Estimated tax</span>
+              <span class="metric-value" id="metricTotalTax">$0</span>
+              <span class="metric-hint">Short + long + NIIT</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">After-tax gain</span>
+              <span class="metric-value" id="metricAfterTax">$0</span>
+              <span class="metric-hint">Total gain minus tax</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Effective rate</span>
+              <span class="metric-value" id="metricEffectiveRate">0%</span>
+              <span class="metric-hint" id="metricTrades">0 trades</span>
+            </div>
+          </div>
+
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Strategy</th>
+                  <th>Total gain</th>
+                  <th>Short-term</th>
+                  <th>Long-term</th>
+                  <th>Estimated tax</th>
+                  <th>After-tax</th>
+                </tr>
+              </thead>
+              <tbody id="strategyTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card card-wide" style="--delay: 0.25s">
+          <div class="card-header">
+            <div>
+              <h2>Lot Matches</h2>
+              <p class="card-subtitle">
+                Every sell matched to the underlying lots by strategy.
+              </p>
+            </div>
+            <span class="badge badge-outline">Details</span>
+          </div>
+
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Trade</th>
+                  <th>Asset</th>
+                  <th>Lot</th>
+                  <th>Acquired</th>
+                  <th>Sold</th>
+                  <th>Qty</th>
+                  <th>Proceeds</th>
+                  <th>Cost</th>
+                  <th>Gain</th>
+                  <th>Term</th>
+                </tr>
+              </thead>
+              <tbody id="matchesTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card card-wide" style="--delay: 0.3s">
+          <div class="card-header">
+            <div>
+              <h2>Asset Summary</h2>
+              <p class="card-subtitle">
+                Totals by asset for the selected strategy.
+              </p>
+            </div>
+            <span class="badge">Summary</span>
+          </div>
+
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th>Short-term gain</th>
+                  <th>Long-term gain</th>
+                  <th>Total gain</th>
+                  <th>Proceeds</th>
+                  <th>Cost</th>
+                </tr>
+              </thead>
+              <tbody id="summaryTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card card-wide" style="--delay: 0.35s">
+          <div class="card-header">
+            <div>
+              <h2>Downloads</h2>
+              <p class="card-subtitle">
+                Export the computed matches and summaries as CSVs.
+              </p>
+            </div>
+            <span class="badge badge-outline">Exports</span>
+          </div>
+
+          <div class="asset-actions">
+            <button class="btn btn-primary" type="button" data-export="matches">
+              Download lot matches
+            </button>
+            <button class="btn btn-ghost" type="button" data-export="summary">
+              Download asset summary
+            </button>
+            <button class="btn btn-ghost" type="button" data-export="form8949">
+              Download Form 8949 CSV
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>
+          Built by
+          <a href="https://briansigafoos.com">Brian Sigafoos</a>.
+
+          Source on
+          <a href="https://github.com/BrianSigafoos/asset-tax-calc">GitHub</a>.
+           
+          More <a href="https://tools.bfoos.net">tools</a>.
+        </p>
+        <div class="footer-meta">
+          This tool is for planning only and does not provide tax advice.
+        </div>
+      </footer>
+    </div>
+
+    <script src="logic.js" defer></script>
+    <script src="app.js" defer></script>
+  </body>
+</html>
