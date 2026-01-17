@@ -459,6 +459,41 @@ trade-6,TSLA,BUY,2025-08-18,4,220,5,Brokerage 1,Add on dip
     })
   })
 
+  const themeToggle = document.getElementById('themeToggle')
+  if (themeToggle) {
+    const root = document.documentElement
+    const saved = window.localStorage.getItem('theme')
+    const media = window.matchMedia
+      ? window.matchMedia('(prefers-color-scheme: dark)')
+      : null
+    const prefersDark = media ? media.matches : false
+    const initial = saved || (prefersDark ? 'dark' : 'light')
+
+    const applyTheme = (theme, persist) => {
+      root.setAttribute('data-theme', theme)
+      themeToggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false')
+      if (persist) {
+        window.localStorage.setItem('theme', theme)
+      }
+    }
+
+    applyTheme(initial, false)
+
+    themeToggle.addEventListener('click', () => {
+      const current = root.getAttribute('data-theme') || 'light'
+      const next = current === 'dark' ? 'light' : 'dark'
+      applyTheme(next, true)
+    })
+
+    if (media) {
+      media.addEventListener('change', (event) => {
+        if (!window.localStorage.getItem('theme')) {
+          applyTheme(event.matches ? 'dark' : 'light', false)
+        }
+      })
+    }
+  }
+
   document.querySelectorAll('.upload-zone').forEach((zone) => {
     zone.addEventListener('dragover', (event) => {
       event.preventDefault()
